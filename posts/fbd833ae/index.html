@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>Jmeter源码系列(5)-JmeterEngine-Jmeter的执行引擎 | 写bug的大耳朵图图</title>
+  <meta name="description" content="导读在前面的几篇文章中，笔者主要分析了Jmeter在Non-Gui模式下的启动过程，知道了jmeter在启动过程中会根据启动参数做各种初始化动作，最后通过以下代码来开始测试:  12345678910111213141516171819202122232425if (!remoteStart) &#123;    JMeterEngine engine &#x3D; new StandardJMeterEn">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Jmeter源码系列(5)-JmeterEngine-Jmeter的执行引擎">
+<meta property="og:url" content="https://linvaux.github.io/posts/fbd833ae/index.html">
+<meta property="og:site_name" content="写bug的大耳朵图图">
+<meta property="og:description" content="导读在前面的几篇文章中，笔者主要分析了Jmeter在Non-Gui模式下的启动过程，知道了jmeter在启动过程中会根据启动参数做各种初始化动作，最后通过以下代码来开始测试:  12345678910111213141516171819202122232425if (!remoteStart) &#123;    JMeterEngine engine &#x3D; new StandardJMeterEn">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-08-04T04:41:26.000Z">
+<meta property="article:modified_time" content="2024-09-21T01:53:16.823Z">
+<meta property="article:author" content="Wick">
+<meta property="article:tag" content="Jmeter源码系列">
+<meta name="twitter:card" content="summary">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://linvaux.github.io/posts/fbd833ae/index.html">
+  
+    <link rel="alternate" href="/atom.xml" title="写bug的大耳朵图图" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+    <link href="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.3.5/dist/jquery.fancybox.min.css" rel="stylesheet">
+  
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body class="main-center theme-black" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://gitee.com/linvaux" target="_blank">
+          <img class="img-circle img-rotate" src="/images/avatar1.jpg" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">大耳朵图图</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Java开发/高级测试开发</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> 中国·南京</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form" method="GET" action="https://www.baidu.com/s?">
+	<div class="input-group">
+    	<input name="wd" type="text" class="form-control search-form-input" placeholder="搜索" />
+	    <span class="input-group-btn">
+	    	<button type="submit" class=" btn btn-flat search-form-submit"><i class="icon icon-search"></i></button>
+	    </span>
+    </div>
+</form>
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav menu-highlight">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">首页</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">归档</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">友链</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">关于</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">公告</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <h5>原博客地址：<a href = "https://geeknote.net/wick">https://geeknote.net/wick</a></h5>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/Docker/" style="font-size: 13.6px;">Docker</a> <a href="/tags/EasyExcel/" style="font-size: 13.4px;">EasyExcel</a> <a href="/tags/IDEA/" style="font-size: 13.4px;">IDEA</a> <a href="/tags/Java/" style="font-size: 14px;">Java</a> <a href="/tags/Jenkins/" style="font-size: 13px;">Jenkins</a> <a href="/tags/Jmeter%E6%89%A9%E5%B1%95%E5%BC%80%E5%8F%91/" style="font-size: 13px;">Jmeter扩展开发</a> <a href="/tags/Jmeter%E6%BA%90%E7%A0%81%E7%B3%BB%E5%88%97/" style="font-size: 13.8px;">Jmeter源码系列</a> <a href="/tags/LogStash/" style="font-size: 13px;">LogStash</a> <a href="/tags/Mac/" style="font-size: 13px;">Mac</a> <a href="/tags/Pytest/" style="font-size: 13px;">Pytest</a> <a href="/tags/%E4%BB%A3%E7%A0%81%E8%A6%86%E7%9B%96%E7%8E%87/" style="font-size: 13.2px;">代码覆盖率</a> <a href="/tags/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/" style="font-size: 13px;">自动化测试</a> <a href="/tags/%E9%9A%8F%E7%AC%94/" style="font-size: 13px;">随笔</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/08/">八月 2024</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/07/">七月 2024</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/05/">五月 2024</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">十月 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">九月 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">八月 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">七月 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/06/">六月 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">四月 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">三月 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/07/">七月 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/05/">五月 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/11/">十一月 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">七月 2019</a><span class="archive-list-count">2</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/posts/a7b6bddb/" class="title">Github Pages使用Hexo搭建个人博客</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-08-24T13:59:39.000Z" itemprop="datePublished">2024-08-24</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/posts/fbd833ae/" class="title">Jmeter源码系列(5)-JmeterEngine-Jmeter的执行引擎</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-08-04T04:41:26.000Z" itemprop="datePublished">2024-08-04</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/posts/75270eba/" class="title">【Jmeter扩展开发】自定义Java请求</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-08-03T01:36:37.000Z" itemprop="datePublished">2024-08-03</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/posts/67f865da/" class="title">IDEA插件整理(二)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-07-31T14:02:28.000Z" itemprop="datePublished">2024-07-31</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/posts/7d6bf7a5/" class="title">Jmeter源码系列(4) - Jmeter 类详解-runNonGui()，无界面模式下的脚本执行过程</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-07-28T14:03:54.000Z" itemprop="datePublished">2024-07-28</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Jmeter源码系列-5-JmeterEngine-Jmeter的执行引擎" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Jmeter源码系列(5)-JmeterEngine-Jmeter的执行引擎
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/posts/fbd833ae/" class="article-date">
+	  <time datetime="2024-08-04T04:41:26.000Z" itemprop="datePublished">2024-08-04</time>
+	</a>
+</span>
+        
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/Jmeter%E6%BA%90%E7%A0%81%E7%B3%BB%E5%88%97/" rel="tag">Jmeter源码系列</a>
+  </span>
+
+
+        
+	<span class="article-read hidden-xs">
+	    <i class="icon icon-eye-fill" aria-hidden="true"></i>
+	    <span id="busuanzi_container_page_pv">
+			<span id="busuanzi_value_page_pv">0</span>
+		</span>
+	</span>
+
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/posts/fbd833ae/#comments" class="article-comment-link">评论</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 6.5k(字)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 28(分)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <h1 id="导读"><a href="#导读" class="headerlink" title="导读"></a>导读</h1><p>在前面的几篇文章中，笔者主要分析了Jmeter在Non-Gui模式下的启动过程，知道了jmeter在启动过程中会根据启动参数做各种初始化动作，最后通过以下代码来开始测试: </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (!remoteStart) &#123;</span><br><span class="line">    <span class="type">JMeterEngine</span> <span class="variable">engine</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">StandardJMeterEngine</span>();</span><br><span class="line">    clonedTree.add(clonedTree.getArray()[<span class="number">0</span>], <span class="keyword">new</span> <span class="title class_">ListenToTest</span>(org.apache.jmeter.JMeter.ListenToTest.RunMode.LOCAL, <span class="literal">false</span>, reportGenerator));</span><br><span class="line">    engine.configure(clonedTree);</span><br><span class="line">    <span class="type">Instant</span> <span class="variable">now</span> <span class="operator">=</span> Instant.now();</span><br><span class="line">    println(<span class="string">&quot;Starting standalone test @ &quot;</span> + formatLikeDate(now) + <span class="string">&quot; (&quot;</span> + now.toEpochMilli() + <span class="string">&#x27;)&#x27;</span>);</span><br><span class="line">    engines.add(engine);</span><br><span class="line">    engine.runTest();</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    java.util.<span class="type">StringTokenizer</span> <span class="variable">st</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">java</span>.util.StringTokenizer(remoteHostsString.trim(), <span class="string">&quot;,&quot;</span>);<span class="comment">//$NON-NLS-1$</span></span><br><span class="line">    List&lt;String&gt; hosts = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line">    <span class="keyword">while</span> (st.hasMoreElements()) &#123;</span><br><span class="line">        hosts.add(((String) st.nextElement()).trim());</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="type">ListenToTest</span> <span class="variable">testListener</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ListenToTest</span>(org.apache.jmeter.JMeter.ListenToTest.RunMode.REMOTE, remoteStop, reportGenerator);</span><br><span class="line">    clonedTree.add(clonedTree.getArray()[<span class="number">0</span>], testListener);</span><br><span class="line">    <span class="type">DistributedRunner</span> <span class="variable">distributedRunner</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">DistributedRunner</span>(<span class="built_in">this</span>.remoteProps);</span><br><span class="line">    distributedRunner.setStdout(System.out); <span class="comment">// NOSONAR</span></span><br><span class="line">    distributedRunner.setStdErr(System.err); <span class="comment">// NOSONAR</span></span><br><span class="line">    distributedRunner.init(hosts, clonedTree);</span><br><span class="line">    engines.addAll(distributedRunner.getEngines());</span><br><span class="line">    testListener.setStartedRemoteEngines(engines);</span><br><span class="line">    distributedRunner.start();</span><br><span class="line">&#125;</span><br><span class="line">startUdpDdaemon(engines);</span><br></pre></td></tr></table></figure>
+
+<p>在上面的代码中可以看到，如果是本地执行，则创建一个 StandardJMeterEngine 实例，并调用其 configure 和 runTest 方法来执行测试计划。如果是远程执行，则创建一个 DistributedRunner 实例，并调用其 init 和 start 方法来启动远程引擎并执行测试计划。</p>
+<h1 id="JMeterEngine"><a href="#JMeterEngine" class="headerlink" title="JMeterEngine"></a>JMeterEngine</h1><p>JMeterEngine是Jmeter的执行引擎，它负责执行测试计划，并管理测试计划中的各种组件，如线程组、采样器、监听器等。</p>
+<p>JMeterEngine接口定义了以下方法：</p>
+<ul>
+<li><code>void configure(HashTree testPlan)</code>：配置测试计划，将测试计划中的各种组件添加到执行引擎中。</li>
+<li><code>void runTest() throws JMeterEngineException</code>：运行测试计划。</li>
+<li><code>default void stopTest() &#123;stopTest(true);&#125;</code>：立即停止测试计划。</li>
+<li><code>void stopTest(boolean now)</code>: 停止测试计划，如果now为true，则立即停止测试计划，否则等待测试计划完成。</li>
+<li><code>void reset()</code>：重置执行引擎，清除所有测试计划中的组件。</li>
+<li><code>void setProperties(Properties p)</code>: 设置执行引擎的属性。</li>
+<li><code>void exit()</code>: 退出执行引擎。</li>
+<li><code>boolean isActive()</code>: 判断执行引擎是否正在运行。</li>
+</ul>
+<p><code>JMeterEngine</code>接口的实现类有<code>StandardJMeterEngine</code>和<code>ClientJMeterEngine</code>，其实大家在看Jmeter源代码时，可能会发现还有一个<code>EmulatorEngine</code>类实现了<code>JMeterEngine</code>, 这个类其实位于<code>org.apache.jmeter.engine.DistributedRunnerTest.EmulatorEngine</code> 是一个用于测试的类，并非是Jmeter的正式实现。</p>
+<h2 id="StandardJMeterEngine"><a href="#StandardJMeterEngine" class="headerlink" title="StandardJMeterEngine"></a>StandardJMeterEngine</h2><p>StandardJMeterEngine 是 JMeter 的标准引擎实现，主要用于在单独的 JMeter 服务器或本地机器上执行性能测试。类定义如下</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">StandardJMeterEngine</span> <span class="keyword">implements</span> <span class="title class_">JMeterEngine</span>, Runnable</span><br></pre></td></tr></table></figure>
+
+<p>StandardJMeterEngine 除了实现 JmeterEngine 接口外，还实现了 Runnable 接口，因此它可以被提交到一个线程池中执行。接下来，我们可以从<code>engine.configure(clonedTree)</code> 和 <code>engine.runTest()</code> 为入口来分析 StandardJMeterEngine 的执行过程。</p>
+<h3 id="configure"><a href="#configure" class="headerlink" title="configure"></a>configure</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">configure</span><span class="params">(HashTree testTree)</span> &#123;</span><br><span class="line">    <span class="comment">// Is testplan serialised?</span></span><br><span class="line">    SearchByClass&lt;TestPlan&gt; testPlan = <span class="keyword">new</span> <span class="title class_">SearchByClass</span>&lt;&gt;(TestPlan.class);</span><br><span class="line">    testTree.traverse(testPlan);</span><br><span class="line">    Object[] plan = testPlan.getSearchResults().toArray();</span><br><span class="line">    <span class="keyword">if</span> (plan.length == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalStateException</span>(<span class="string">&quot;Could not find the TestPlan class!&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="type">TestPlan</span> <span class="variable">tp</span> <span class="operator">=</span> (TestPlan) plan[<span class="number">0</span>];</span><br><span class="line">    serialized = tp.isSerialized();</span><br><span class="line">    tearDownOnShutdown = tp.isTearDownOnShutdown();</span><br><span class="line">    active = <span class="literal">true</span>;</span><br><span class="line">    test = testTree;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>configure方法执行过程如下：</p>
+<ol>
+<li>从testTree中查找TestPlan对象，如果找不到，则抛出异常。<code>testTree.traverse(testPlan)</code> 的作用是遍历 HashTree 对象中的内容，并根据提供的 SearchByClass 对象对每个节点进行检查或搜索。其实<code>HashTree#traverse</code>使用了访问者模式，<code>SearchByClass</code>类实现了<code>HashTreeTraverser</code>接口，通过实现此接口，类可以轻松遍历 HashTree 对象，并通过某些事件的回调获得通知。</li>
+<li>获取TestPlan对象的serialized和tearDownOnShutdown属性，并设置到StandardJMeterEngine对象中。</li>
+<li>设置StandardJMeterEngine对象的active属性为true，表示引擎已经准备好执行测试计划。</li>
+<li>将testTree赋值给StandardJMeterEngine对象的test属性，以便在执行测试计划时使用。</li>
+</ol>
+<h3 id="runTest"><a href="#runTest" class="headerlink" title="runTest"></a>runTest</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">runTest</span><span class="params">()</span> <span class="keyword">throws</span> JMeterEngineException &#123;</span><br><span class="line">    <span class="keyword">if</span> (host != <span class="literal">null</span>)&#123;</span><br><span class="line">        <span class="type">Instant</span> <span class="variable">now</span> <span class="operator">=</span> Instant.now();</span><br><span class="line">        <span class="type">String</span> <span class="variable">nowAsString</span> <span class="operator">=</span> formatLikeDate(now);</span><br><span class="line">        System.out.println(<span class="string">&quot;Starting the test on host &quot;</span>  <span class="comment">// NOSONAR Intentional</span></span><br><span class="line">                + host + <span class="string">&quot; @ &quot;</span> + nowAsString + <span class="string">&quot; (&quot;</span> + now.toEpochMilli() + <span class="string">&#x27;)&#x27;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        runningTest = EXECUTOR_SERVICE.submit(<span class="built_in">this</span>);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception err) &#123;</span><br><span class="line">        stopTest();</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">JMeterEngineException</span>(err);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>runTest方法执行过程如下：</p>
+<ol>
+<li>如果StandardJMeterEngine对象的host属性不为null，则打印一条日志，记录测试开始的时间和主机信息。</li>
+<li>调用EXECUTOR_SERVICE.submit(this)方法将StandardJMeterEngine对象提交到一个线程池中执行。EXECUTOR_SERVICE是一个线程池，用于执行StandardJMeterEngine对象的run方法。线程池定义如下</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 线程安全的计数器，用于在创建线程时生成唯一的线程名</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">AtomicInteger</span> <span class="variable">THREAD_COUNTER</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">AtomicInteger</span>(<span class="number">0</span>);</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 执行器服务，用于执行“启动测试”、“停止测试”等管理任务。使用 ExecutorService 允许从线程传播异常。线程保持alive时间设置为 1 秒，因此线程会提前释放，因此应用程序可以更快地关闭。</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">ExecutorService</span> <span class="variable">EXECUTOR_SERVICE</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ThreadPoolExecutor</span>(</span><br><span class="line">        <span class="number">0</span>,</span><br><span class="line">        Integer.MAX_VALUE,</span><br><span class="line">        <span class="number">1L</span>,</span><br><span class="line">        TimeUnit.SECONDS,</span><br><span class="line">        <span class="keyword">new</span> <span class="title class_">java</span>.util.concurrent.SynchronousQueue&lt;&gt;(),</span><br><span class="line">        (runnable) -&gt; <span class="keyword">new</span> <span class="title class_">Thread</span>(runnable, <span class="string">&quot;StandardJMeterEngine-&quot;</span> + THREAD_COUNTER.incrementAndGet()));</span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>如果提交线程池失败，则调用stopTest方法停止测试，并抛出JMeterEngineException异常。</li>
+</ol>
+<p>至此，StandardJMeterEngine对象的runTest方法执行完毕，测试计划开始执行。那接下来我们就需要看下StandardJMeterEngine对象的run方法了。</p>
+<h3 id="run"><a href="#run" class="headerlink" title="run"></a>run</h3><p>先贴一个完整方法定义，然后再逐步分析</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">run</span><span class="params">()</span> &#123;</span><br><span class="line">    log.info(<span class="string">&quot;Running the test!&quot;</span>);</span><br><span class="line">    running = <span class="literal">true</span>;</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * Ensure that the sample variables are correctly initialised for each run.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    SampleEvent.initSampleVariables();</span><br><span class="line">    JMeterContextService.startTest();</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="type">PreCompiler</span> <span class="variable">compiler</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">PreCompiler</span>();</span><br><span class="line">        test.traverse(compiler);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (RuntimeException e) &#123;</span><br><span class="line">        log.error(<span class="string">&quot;Error occurred compiling the tree:&quot;</span>, e);</span><br><span class="line">        JMeterUtils.reportErrorToUser(<span class="string">&quot;Error occurred compiling the tree: - see log file&quot;</span>, e);</span><br><span class="line">        <span class="keyword">return</span>; <span class="comment">// no point continuing</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * Notification of test listeners needs to happen after function</span></span><br><span class="line"><span class="comment">     * replacement, but before setting RunningVersion to true.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    SearchByClass&lt;TestStateListener&gt; testListeners = <span class="keyword">new</span> <span class="title class_">SearchByClass</span>&lt;&gt;(TestStateListener.class); <span class="comment">// TL - S&amp;E</span></span><br><span class="line">    test.traverse(testListeners);</span><br><span class="line">    <span class="comment">// Merge in any additional test listeners</span></span><br><span class="line">    <span class="comment">// currently only used by the function parser</span></span><br><span class="line">    testListeners.getSearchResults().addAll(testList);</span><br><span class="line">    testList.clear(); <span class="comment">// no longer needed</span></span><br><span class="line">    test.traverse(<span class="keyword">new</span> <span class="title class_">TurnElementsOn</span>());</span><br><span class="line">    notifyTestListenersOfStart(testListeners);</span><br><span class="line">    List&lt;?&gt; testLevelElements = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;(test.list(test.getArray()[<span class="number">0</span>]));</span><br><span class="line">    removeThreadGroups(testLevelElements);</span><br><span class="line">    SearchByClass&lt;SetupThreadGroup&gt; setupSearcher = <span class="keyword">new</span> <span class="title class_">SearchByClass</span>&lt;&gt;(SetupThreadGroup.class);</span><br><span class="line">    SearchByClass&lt;AbstractThreadGroup&gt; searcher = <span class="keyword">new</span> <span class="title class_">SearchByClass</span>&lt;&gt;(AbstractThreadGroup.class);</span><br><span class="line">    SearchByClass&lt;PostThreadGroup&gt; postSearcher = <span class="keyword">new</span> <span class="title class_">SearchByClass</span>&lt;&gt;(PostThreadGroup.class);</span><br><span class="line">    test.traverse(setupSearcher);</span><br><span class="line">    test.traverse(searcher);</span><br><span class="line">    test.traverse(postSearcher);</span><br><span class="line">    TestCompiler.initialize();</span><br><span class="line">    <span class="comment">// for each thread group, generate threads</span></span><br><span class="line">    <span class="comment">// hand each thread the sampler controller</span></span><br><span class="line">    <span class="comment">// and the listeners, and the timer</span></span><br><span class="line">    Iterator&lt;SetupThreadGroup&gt; setupIter = setupSearcher.getSearchResults().iterator();</span><br><span class="line">    Iterator&lt;AbstractThreadGroup&gt; iter = searcher.getSearchResults().iterator();</span><br><span class="line">    Iterator&lt;PostThreadGroup&gt; postIter = postSearcher.getSearchResults().iterator();</span><br><span class="line">    <span class="type">ListenerNotifier</span> <span class="variable">notifier</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ListenerNotifier</span>();</span><br><span class="line">    <span class="type">int</span> <span class="variable">groupCount</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line">    JMeterContextService.clearTotalThreads();</span><br><span class="line">    <span class="keyword">if</span> (setupIter.hasNext()) &#123;</span><br><span class="line">        log.info(<span class="string">&quot;Starting setUp thread groups&quot;</span>);</span><br><span class="line">        <span class="keyword">while</span> (running &amp;&amp; setupIter.hasNext()) &#123;<span class="comment">//for each setup thread group</span></span><br><span class="line">            <span class="type">AbstractThreadGroup</span> <span class="variable">group</span> <span class="operator">=</span> setupIter.next();</span><br><span class="line">            groupCount++;</span><br><span class="line">            <span class="type">String</span> <span class="variable">groupName</span> <span class="operator">=</span> group.getName();</span><br><span class="line">            log.info(<span class="string">&quot;Starting setUp ThreadGroup: &#123;&#125; : &#123;&#125; &quot;</span>, groupCount, groupName);</span><br><span class="line">            startThreadGroup(group, groupCount, setupSearcher, testLevelElements, notifier);</span><br><span class="line">            <span class="keyword">if</span> (serialized &amp;&amp; setupIter.hasNext()) &#123;</span><br><span class="line">                log.info(<span class="string">&quot;Waiting for setup thread group: &#123;&#125; to finish before starting next setup group&quot;</span>,</span><br><span class="line">                        groupName);</span><br><span class="line">                group.waitThreadsStopped();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        log.info(<span class="string">&quot;Waiting for all setup thread groups to exit&quot;</span>);</span><br><span class="line">        <span class="comment">//wait for all Setup Threads To Exit</span></span><br><span class="line">        waitThreadsStopped();</span><br><span class="line">        log.info(<span class="string">&quot;All Setup Threads have ended&quot;</span>);</span><br><span class="line">        groupCount = <span class="number">0</span>;</span><br><span class="line">        JMeterContextService.clearTotalThreads();</span><br><span class="line">    &#125;</span><br><span class="line">    groups.clear(); <span class="comment">// The groups have all completed now</span></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * Here&#x27;s where the test really starts. Run a Full GC now: it&#x27;s no harm</span></span><br><span class="line"><span class="comment">     * at all (just delays test start by a tiny amount) and hitting one too</span></span><br><span class="line"><span class="comment">     * early in the test can impair results for short tests.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    JMeterUtils.helpGC();</span><br><span class="line">    JMeterContextService.getContext().setSamplingStarted(<span class="literal">true</span>);</span><br><span class="line">    <span class="type">boolean</span> <span class="variable">mainGroups</span> <span class="operator">=</span> running; <span class="comment">// still running at this point, i.e. setUp was not cancelled</span></span><br><span class="line">    <span class="keyword">while</span> (running &amp;&amp; iter.hasNext()) &#123;<span class="comment">// for each thread group</span></span><br><span class="line">        <span class="type">AbstractThreadGroup</span> <span class="variable">group</span> <span class="operator">=</span> iter.next();</span><br><span class="line">        <span class="comment">//ignore Setup and Post here.  We could have filtered the searcher. but then</span></span><br><span class="line">        <span class="comment">//future Thread Group objects wouldn&#x27;t execute.</span></span><br><span class="line">        <span class="keyword">if</span> (group <span class="keyword">instanceof</span> SetupThreadGroup ||</span><br><span class="line">                group <span class="keyword">instanceof</span> PostThreadGroup) &#123;</span><br><span class="line">            <span class="keyword">continue</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        groupCount++;</span><br><span class="line">        <span class="type">String</span> <span class="variable">groupName</span> <span class="operator">=</span> group.getName();</span><br><span class="line">        log.info(<span class="string">&quot;Starting ThreadGroup: &#123;&#125; : &#123;&#125;&quot;</span>, groupCount, groupName);</span><br><span class="line">        startThreadGroup(group, groupCount, searcher, testLevelElements, notifier);</span><br><span class="line">        <span class="keyword">if</span> (serialized &amp;&amp; iter.hasNext()) &#123;</span><br><span class="line">            log.info(<span class="string">&quot;Waiting for thread group: &#123;&#125; to finish before starting next group&quot;</span>, groupName);</span><br><span class="line">            group.waitThreadsStopped();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="comment">// end of thread groups</span></span><br><span class="line">    <span class="keyword">if</span> (groupCount == <span class="number">0</span>) &#123; <span class="comment">// No TGs found</span></span><br><span class="line">        log.info(<span class="string">&quot;No enabled thread groups found&quot;</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (running) &#123;</span><br><span class="line">            log.info(<span class="string">&quot;All thread groups have been started&quot;</span>);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            log.info(<span class="string">&quot;Test stopped - no more thread groups will be started&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//wait for all Test Threads To Exit</span></span><br><span class="line">    waitThreadsStopped();</span><br><span class="line">    groups.clear(); <span class="comment">// The groups have all completed now</span></span><br><span class="line">    <span class="keyword">if</span> (postIter.hasNext()) &#123;</span><br><span class="line">        groupCount = <span class="number">0</span>;</span><br><span class="line">        JMeterContextService.clearTotalThreads();</span><br><span class="line">        log.info(<span class="string">&quot;Starting tearDown thread groups&quot;</span>);</span><br><span class="line">        <span class="keyword">if</span> (mainGroups &amp;&amp; !running) &#123; <span class="comment">// i.e. shutdown/stopped during main thread groups</span></span><br><span class="line">            running = tearDownOnShutdown; <span class="comment">// re-enable for tearDown if necessary</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">while</span> (running &amp;&amp; postIter.hasNext()) &#123;<span class="comment">//for each setup thread group</span></span><br><span class="line">            <span class="type">AbstractThreadGroup</span> <span class="variable">group</span> <span class="operator">=</span> postIter.next();</span><br><span class="line">            groupCount++;</span><br><span class="line">            <span class="type">String</span> <span class="variable">groupName</span> <span class="operator">=</span> group.getName();</span><br><span class="line">            log.info(<span class="string">&quot;Starting tearDown ThreadGroup: &#123;&#125; : &#123;&#125;&quot;</span>, groupCount, groupName);</span><br><span class="line">            startThreadGroup(group, groupCount, postSearcher, testLevelElements, notifier);</span><br><span class="line">            <span class="keyword">if</span> (serialized &amp;&amp; postIter.hasNext()) &#123;</span><br><span class="line">                log.info(<span class="string">&quot;Waiting for post thread group: &#123;&#125; to finish before starting next post group&quot;</span>, groupName);</span><br><span class="line">                group.waitThreadsStopped();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        waitThreadsStopped(); <span class="comment">// wait for Post threads to stop</span></span><br><span class="line">    &#125;</span><br><span class="line">    notifyTestListenersOfEnd(testListeners);</span><br><span class="line">    JMeterContextService.endTest();</span><br><span class="line">    <span class="keyword">if</span> (JMeter.isNonGUI() &amp;&amp; SYSTEM_EXIT_FORCED) &#123;</span><br><span class="line">        log.info(<span class="string">&quot;Forced JVM shutdown requested at end of test&quot;</span>);</span><br><span class="line">        System.exit(<span class="number">0</span>); <span class="comment">// NOSONAR Intentional</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>初始化与日志记录:</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">log.info(<span class="string">&quot;Running the test!&quot;</span>);</span><br><span class="line">running = <span class="literal">true</span>;</span><br></pre></td></tr></table></figure>
+
+<p>测试开始，并且设置一个标志表明测试正在运行。</p>
+<ol start="2">
+<li>采样器变量初始化</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">SampleEvent.initSampleVariables();</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">initSampleVariables</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="type">String</span> <span class="variable">vars</span> <span class="operator">=</span> JMeterUtils.getProperty(SAMPLE_VARIABLES);</span><br><span class="line">    variableNames = vars != <span class="literal">null</span> ? vars.split(<span class="string">&quot;,&quot;</span>) : <span class="keyword">new</span> <span class="title class_">String</span>[<span class="number">0</span>];</span><br><span class="line">    <span class="keyword">if</span> (log.isInfoEnabled()) &#123;</span><br><span class="line">        log.info(<span class="string">&quot;List of sample_variables: &#123;&#125;&quot;</span>, Arrays.toString(variableNames));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>初始化采样器变量，这些变量将在测试期间用于存储和访问采样数据，</p>
+<ol start="3">
+<li>JMeterContextService 标记测试开始</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">JMeterContextService.startTest();</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title function_">startTest</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (testStart.get() == <span class="number">0</span>) &#123;</span><br><span class="line">        NUMBER_OF_ACTIVE_THREADS.set(<span class="number">0</span>);</span><br><span class="line">        testStart.set(System.currentTimeMillis());</span><br><span class="line">        JMeterUtils.setProperty(<span class="string">&quot;TESTSTART.MS&quot;</span>, Long.toString(testStart.get()));<span class="comment">// $NON-NLS-1$</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个同步的静态方法作用如下：</p>
+<ul>
+<li>检查测试是否已经开始:<br>使用原子变量 testStart（类型为 AtomicLong）来检查测试是否已经开始了。如果 testStart 的值为0，说明测试尚未开始。其实在测试结束后，也会通过调用 JMeterContextService.endTest() 方法将 testStart 的值重置为0。</li>
+<li>设置活跃线程数:<br>将 NUMBER_OF_ACTIVE_THREADS（也是 AtomicInteger 类型）设置为0，这通常用于跟踪活跃的线程数量。在测试开始时将其重置，以便正确地计数参与测试的线程。</li>
+<li>记录测试开始时间:<br>设置 testStart 的值为当前时间戳（毫秒级）。这提供了测试开始的基准时间，对于分析测试结果和监控性能指标非常有用。</li>
+<li>保存测试开始时间到属性:<br>将测试开始的时间戳保存到 JMeter 属性中，键为 “TESTSTART.MS”。这使得测试开始时间可以在测试过程中被其他部分引用，例如在日志记录或结果报告中。</li>
+</ul>
+<p>通过调用 startTest() 方法，JMeter 能够确保每个测试运行都有一个明确的起点，这对于统计和报告测试期间的性能指标非常重要。在多线程环境中，由于该方法被声明为 synchronized，可以保证即使有多个线程同时尝试调用它，也只会有一个线程能够进入方法体，从而避免了并发修改 testStart 或 NUMBER_OF_ACTIVE_THREADS 变量可能引发的问题。</p>
+<ol start="4">
+<li>HashTree预编译</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="type">PreCompiler</span> <span class="variable">compiler</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">PreCompiler</span>();</span><br><span class="line">    test.traverse(compiler);</span><br><span class="line">&#125; <span class="keyword">catch</span> (RuntimeException e) &#123;</span><br><span class="line">    log.error(<span class="string">&quot;Error occurred compiling the tree:&quot;</span>, e);</span><br><span class="line">    JMeterUtils.reportErrorToUser(<span class="string">&quot;Error occurred compiling the tree: - see log file&quot;</span>, e);</span><br><span class="line">    <span class="keyword">return</span>; <span class="comment">// no point continuing</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>虽然代码就两三行，但是里面的信息量是非常大的，HashTree 是 JMeter 的核心数据结构，它存储了所有测试组件的配置信息，包括线程组、采样器、监听器等。在测试开始之前，JMeter 会遍历整个 HashTree，对每个组件进行预编译，以便在测试运行时能够快速地访问和执行这些组件。预编译的过程其实就是变量替换的过程，它将配置文件中的变量替换为实际的值，以便在测试运行时能够正确地使用这些变量。预编译是 JMeter 性能优化的关键之一，因为它可以减少测试运行时的计算量，提高测试的执行效率。然而，需要注意的是，某些动态值（如随机数或基于时间的值或参数化的变量等）在预编译时只能计算一次，这意味着如果需要在每次采样时都有不同的值，那么这些函数将不能完全预编译，而是在每次采样时重新计算。预编译会调用<code>org.apache.jmeter.engine.PreCompiler#addNode</code> 方法，其中涉及到一个非常重要的类，叫做 <code>org.apache.jmeter.engine.util.ValueReplacer</code>，变量替换就由它实现。由于篇幅有限，不在此处展开讲变量替换的过程，在后面讲Jmeter核心类的文章中会讲解此类。此处我们只要知道这段代码做什么就行了。</p>
+<ol start="5">
+<li>通知监听器</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * Notification of test listeners needs to happen after function</span></span><br><span class="line"><span class="comment"> * replacement, but before setting RunningVersion to true.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">SearchByClass&lt;TestStateListener&gt; testListeners = <span class="keyword">new</span> <span class="title class_">SearchByClass</span>&lt;&gt;(TestStateListener.class); <span class="comment">// TL - S&amp;E</span></span><br><span class="line">test.traverse(testListeners);</span><br><span class="line"><span class="comment">// Merge in any additional test listeners</span></span><br><span class="line"><span class="comment">// currently only used by the function parser</span></span><br><span class="line">testListeners.getSearchResults().addAll(testList);</span><br><span class="line">testList.clear(); <span class="comment">// no longer needed</span></span><br><span class="line">test.traverse(<span class="keyword">new</span> <span class="title class_">TurnElementsOn</span>());</span><br><span class="line">notifyTestListenersOfStart(testListeners);</span><br></pre></td></tr></table></figure>
+<p>遍历测试计划树，收集所有的<code>org.apache.jmeter.testelement.TestStateListener</code>实例，并激活所有测试元素，准备它们的运行状态，然后通知这些监听器(实现了TestStateListener接口的类)测试即将开始。TestStateListener 是 JMeter 中用于监听测试状态变化的接口，它定义了在测试开始、结束以及每个采样周期开始和结束时需要执行的方法。通过调用 notifyTestListenersOfStart() 方法，JMeter 可以确保所有注册的 TestStateListener 都能够接收到测试开始的通知，并执行相应的操作。发送测试开始通知的方法是 <code>org.apache.jmeter.engine.StandardJMeterEngine#notifyTestListenersOfStart</code>。</p>
+<ol start="6">
+<li>准备测试元素</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">List&lt;?&gt; testLevelElements = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;(test.list(test.getArray()[<span class="number">0</span>]));</span><br><span class="line">removeThreadGroups(testLevelElements);</span><br><span class="line">SearchByClass&lt;SetupThreadGroup&gt; setupSearcher = <span class="keyword">new</span> <span class="title class_">SearchByClass</span>&lt;&gt;(SetupThreadGroup.class);</span><br><span class="line">SearchByClass&lt;AbstractThreadGroup&gt; searcher = <span class="keyword">new</span> <span class="title class_">SearchByClass</span>&lt;&gt;(AbstractThreadGroup.class);</span><br><span class="line">SearchByClass&lt;PostThreadGroup&gt; postSearcher = <span class="keyword">new</span> <span class="title class_">SearchByClass</span>&lt;&gt;(PostThreadGroup.class);</span><br><span class="line">test.traverse(setupSearcher);</span><br><span class="line">test.traverse(searcher);</span><br><span class="line">test.traverse(postSearcher);</span><br><span class="line">TestCompiler.initialize();</span><br></pre></td></tr></table></figure>
+<ul>
+<li>这里首先获取测试计划的顶层元素列表。test 对象代表的是测试计划 (TestPlan)，test.getArray()[0] 获取的是测试计划数组中的第一个元素，通常这是测试计划的根元素。然后通过调用 list() 方法获取与该元素关联的所有子元素，并将这些子元素放入一个 ArrayList 中。由于类型不确定，所以列表的类型声明为 List&lt;?&gt;。</li>
+<li>接下来，调用 removeThreadGroups() 方法从列表中移除所有线程组。线程组是 JMeter 中用于控制测试并发性的组件，它定义了测试中并发线程的数量以及每个线程的行为。在测试计划中，线程组通常位于顶层元素之下，因此需要从顶层元素列表中移除它们，以便后续的遍历操作不会重复处理线程组。</li>
+<li>然后，创建三个 SearchByClass 对象，分别用于搜索 SetupThreadGroup、AbstractThreadGroup 和 PostThreadGroup 类型的元素。这些类都是 JMeter 中用于控制测试设置和清理的组件，它们定义了在测试开始之前和结束之后需要执行的操作。</li>
+<li>接下来，调用 test.traverse() 方法遍历测试计划树，将 SetupThreadGroup 类型的元素添加到 setupSearcher 的结果列表中，将 AbstractThreadGroup 类型的元素添加到 searcher 的结果列表中，将 PostThreadGroup 类型的元素添加到 postSearcher 的结果列表中。</li>
+<li>最后，调用 TestCompiler.initialize() 方法初始化测试编译器。测试编译器是 JMeter 中用于将测试计划转换为可执行代码的组件，它将测试计划中的元素转换为相应的 Java 代码，以便在测试执行期间执行。初始化测试编译器是执行测试之前的必要步骤，它确保测试编译器已经准备好处理测试计划中的元素。<strong>划重点：TestCompiler.initialize() 方法是 JMeter 中用于初始化测试编译器的静态方法，它将测试计划中的元素转换为相应的 Java 代码，以便在测试执行期间执行。初始化测试编译器是执行测试之前的必要步骤，它确保测试编译器已经准备好处理测试计划中的元素。大家如果有兴趣，可以使用文本工具打开一个jmx文件看下，里面<code>ThreadGroup</code>标签有两个属性<code>guiClass</code> 和 <code>testclass</code> 在&lt;jmeter安装路径&gt;&#x2F;bin&#x2F;saveservice.properties 文件中就定义了这些标签名和全限定类名的映射关系，当然，其他组件也是类似。</strong></li>
+</ul>
+<ol start="7">
+<li>准备线程组，开始预热</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">Iterator&lt;SetupThreadGroup&gt; setupIter = setupSearcher.getSearchResults().iterator();</span><br><span class="line">Iterator&lt;AbstractThreadGroup&gt; iter = searcher.getSearchResults().iterator();</span><br><span class="line">Iterator&lt;PostThreadGroup&gt; postIter = postSearcher.getSearchResults().iterator();</span><br><span class="line"><span class="type">ListenerNotifier</span> <span class="variable">notifier</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ListenerNotifier</span>();</span><br><span class="line"><span class="type">int</span> <span class="variable">groupCount</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line">JMeterContextService.clearTotalThreads();</span><br><span class="line"><span class="keyword">if</span> (setupIter.hasNext()) &#123;</span><br><span class="line">    log.info(<span class="string">&quot;Starting setUp thread groups&quot;</span>);</span><br><span class="line">    <span class="keyword">while</span> (running &amp;&amp; setupIter.hasNext()) &#123;<span class="comment">//for each setup thread group</span></span><br><span class="line">        <span class="type">AbstractThreadGroup</span> <span class="variable">group</span> <span class="operator">=</span> setupIter.next();</span><br><span class="line">        groupCount++;</span><br><span class="line">        <span class="type">String</span> <span class="variable">groupName</span> <span class="operator">=</span> group.getName();</span><br><span class="line">        log.info(<span class="string">&quot;Starting setUp ThreadGroup: &#123;&#125; : &#123;&#125; &quot;</span>, groupCount, groupName);</span><br><span class="line">        startThreadGroup(group, groupCount, setupSearcher, testLevelElements, notifier);</span><br><span class="line">        <span class="keyword">if</span> (serialized &amp;&amp; setupIter.hasNext()) &#123;</span><br><span class="line">            log.info(<span class="string">&quot;Waiting for setup thread group: &#123;&#125; to finish before starting next setup group&quot;</span>,</span><br><span class="line">                    groupName);</span><br><span class="line">            group.waitThreadsStopped();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    log.info(<span class="string">&quot;Waiting for all setup thread groups to exit&quot;</span>);</span><br><span class="line">    <span class="comment">//wait for all Setup Threads To Exit</span></span><br><span class="line">    waitThreadsStopped();</span><br><span class="line">    log.info(<span class="string">&quot;All Setup Threads have ended&quot;</span>);</span><br><span class="line">    groupCount = <span class="number">0</span>;</span><br><span class="line">    JMeterContextService.clearTotalThreads();</span><br><span class="line">&#125;</span><br><span class="line">groups.clear();</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>首先，创建三个 Iterator 对象，分别用于遍历 setupSearcher、searcher 和 postSearcher 的结果列表。这些 Iterator 对象用于遍历测试计划树中找到的 SetupThreadGroup、AbstractThreadGroup 和 PostThreadGroup 类型的元素。</li>
+<li>接下来，创建一个 ListenerNotifier 对象，用于通知监听器测试执行的状态。ListenerNotifier 是 JMeter 中用于通知监听器测试执行状态的组件，它将测试执行的状态信息传递给监听器，以便它们可以执行相应的操作。在测试执行期间，ListenerNotifier 对象会不断更新测试执行的状态，并将状态信息传递给监听器。</li>
+<li>然后，获取测试计划树中找到的线程组的数量，并将其存储在 groupCount 变量中。groupCount 变量用于记录测试计划树中找到的线程组的数量，以便在测试执行期间进行计数。</li>
+<li>接下来，调用 JMeterContextService.clearTotalThreads() 方法清除 JMeter 上下文中的总线程数。JMeterContextService 是 JMeter 中用于管理 JMeter 上下文的组件，它提供了许多与 JMeter 上下文相关的操作，例如获取和设置上下文属性、获取和设置上下文中的线程数等。调用 JMeterContextService.clearTotalThreads() 方法可以清除 JMeter 上下文中的总线程数，以便在测试执行期间重新计算总线程数。</li>
+<li>然后，判断是否需要执行 setup 线程组。如果有下一个 setup 线程组，则进入 while 循环，循环执行 setup 线程组的启动操作。SetupThreadGroup 通常用于在测试开始前执行一些预处理任务，如数据库连接、服务器预热等。</li>
+<li>如果没有线程组，或者setup线程组执行完了，则调用<code>groups.clear()</code>清理groups集合。</li>
+</ul>
+<ol start="8">
+<li>执行前，扫个地</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">JMeterUtils.helpGC();</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">helpGC</span><span class="params">()</span> &#123;</span><br><span class="line">    System.gc(); <span class="comment">// NOSONAR Intentional</span></span><br><span class="line">    System.runFinalization();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>jmeter真正开始执行前，调用<code>System.gc()</code>和<code>System.runFinalization()</code>方法，以帮助 JVM 进行垃圾回收和运行终结器。这些方法可以减少内存泄漏和垃圾堆积的问题，从而提高测试的稳定性和性能。</p>
+<ol start="9">
+<li>开始执行</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">JMeterContextService.getContext().setSamplingStarted(<span class="literal">true</span>);</span><br><span class="line"><span class="type">boolean</span> <span class="variable">mainGroups</span> <span class="operator">=</span> running; <span class="comment">// still running at this point, i.e. setUp was not cancelled</span></span><br><span class="line"><span class="keyword">while</span> (running &amp;&amp; iter.hasNext()) &#123;<span class="comment">// for each thread group</span></span><br><span class="line">    <span class="type">AbstractThreadGroup</span> <span class="variable">group</span> <span class="operator">=</span> iter.next();</span><br><span class="line">    <span class="comment">//ignore Setup and Post here.  We could have filtered the searcher. but then</span></span><br><span class="line">    <span class="comment">//future Thread Group objects wouldn&#x27;t execute.</span></span><br><span class="line">    <span class="keyword">if</span> (group <span class="keyword">instanceof</span> SetupThreadGroup || group <span class="keyword">instanceof</span> PostThreadGroup) &#123;</span><br><span class="line">        <span class="keyword">continue</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    groupCount++;</span><br><span class="line">    <span class="type">String</span> <span class="variable">groupName</span> <span class="operator">=</span> group.getName();</span><br><span class="line">    log.info(<span class="string">&quot;Starting ThreadGroup: &#123;&#125; : &#123;&#125;&quot;</span>, groupCount, groupName);</span><br><span class="line">    startThreadGroup(group, groupCount, searcher, testLevelElements, notifier);</span><br><span class="line">    <span class="keyword">if</span> (serialized &amp;&amp; iter.hasNext()) &#123;</span><br><span class="line">        log.info(<span class="string">&quot;Waiting for thread group: &#123;&#125; to finish before starting next group&quot;</span>, groupName);</span><br><span class="line">        group.waitThreadsStopped();</span><br><span class="line">    &#125;</span><br><span class="line">&#125; <span class="comment">// end of thread groups</span></span><br><span class="line"><span class="keyword">if</span> (groupCount == <span class="number">0</span>) &#123; <span class="comment">// No TGs found</span></span><br><span class="line">    log.info(<span class="string">&quot;No enabled thread groups found&quot;</span>);</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (running) &#123;</span><br><span class="line">        log.info(<span class="string">&quot;All thread groups have been started&quot;</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        log.info(<span class="string">&quot;Test stopped - no more thread groups will be started&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;<span class="comment">//wait for all Test Threads To Exit</span></span><br><span class="line">waitThreadsStopped();</span><br><span class="line">groups.clear(); <span class="comment">// The groups have all completed now</span></span><br></pre></td></tr></table></figure>
+
+<p>这段代码用于真正的拉起线程组（非 setup&#x2F;post 线程组）执行测试，在测试线程组开始执行前，JMeterContextService 会设置采样器状态为 true，即测试开始了，监听器可以开始收集数据了。 等线程组结束后，继续把线程组清理掉。</p>
+<ol start="10">
+<li>线程组执行结束，扫地</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (postIter.hasNext()) &#123;</span><br><span class="line">    groupCount = <span class="number">0</span>;</span><br><span class="line">    JMeterContextService.clearTotalThreads();</span><br><span class="line">    log.info(<span class="string">&quot;Starting tearDown thread groups&quot;</span>);</span><br><span class="line">    <span class="keyword">if</span> (mainGroups &amp;&amp; !running) &#123; <span class="comment">// i.e. shutdown/stopped during main thread groups</span></span><br><span class="line">        running = tearDownOnShutdown; <span class="comment">// re-enable for tearDown if necessary</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">while</span> (running &amp;&amp; postIter.hasNext()) &#123;<span class="comment">//for each setup thread group</span></span><br><span class="line">        <span class="type">AbstractThreadGroup</span> <span class="variable">group</span> <span class="operator">=</span> postIter.next();</span><br><span class="line">        groupCount++;</span><br><span class="line">        <span class="type">String</span> <span class="variable">groupName</span> <span class="operator">=</span> group.getName();</span><br><span class="line">        log.info(<span class="string">&quot;Starting tearDown ThreadGroup: &#123;&#125; : &#123;&#125;&quot;</span>, groupCount, groupName);</span><br><span class="line">        startThreadGroup(group, groupCount, postSearcher, testLevelElements, notifier);</span><br><span class="line">        <span class="keyword">if</span> (serialized &amp;&amp; postIter.hasNext()) &#123;</span><br><span class="line">            log.info(<span class="string">&quot;Waiting for post thread group: &#123;&#125; to finish before starting next post group&quot;</span>, groupName);</span><br><span class="line">            group.waitThreadsStopped();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    waitThreadsStopped(); <span class="comment">// wait for Post threads to stop</span></span><br><span class="line">&#125;</span><br><span class="line">notifyTestListenersOfEnd(testListeners);</span><br><span class="line">JMeterContextService.endTest();</span><br><span class="line"><span class="keyword">if</span> (JMeter.isNonGUI() &amp;&amp; SYSTEM_EXIT_FORCED) &#123;</span><br><span class="line">    log.info(<span class="string">&quot;Forced JVM shutdown requested at end of test&quot;</span>);</span><br><span class="line">    System.exit(<span class="number">0</span>); <span class="comment">// NOSONAR Intentional</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>post线程组类似于我们写ut时的teardown，在测试结束后，执行一些清理工作，比如关闭文件、关闭数据库连接等。PostThreadGroup 执行结束后，又会通知监听器，测试结束了，然后重置线程数为0。最后再根据配置来看在Non-Gui模式下是否需要终止进程。</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>至此，StandardJMeterEngine 的执行流程就分析完了。整个执行过程可以简短概括为：</p>
+<ol>
+<li>初始化测试</li>
+<li>执行setup线程组</li>
+<li>执行测试线程组</li>
+<li>执行post线程组</li>
+<li>执行结束</li>
+</ol>
+<h2 id="ClientJMeterEngine"><a href="#ClientJMeterEngine" class="headerlink" title="ClientJMeterEngine"></a>ClientJMeterEngine</h2><p>ClientJMeterEngine 是 JMeter 的客户端执行引擎，它主要负责在远程模式下，执行远程服务器上的测试计划。在执行远程测试时，ClientJMeterEngine#runTest 被非像本地测试一样被直接调用，而是通过<code>org.apache.jmeter.engine.DistributedRunner#start(java.util.List&lt;java.lang.String&gt;)</code>来被调用。此处我们只分析ClientJMeterEngine 的 runTest 方法。先不关注 DistributedRunner 是如何分发测试任务的。接下来我们还是从 <code>configure</code> 和 <code>runTest</code> 两个方法来入手分析</p>
+<h3 id="configure-1"><a href="#configure-1" class="headerlink" title="configure"></a>configure</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">configure</span><span class="params">(HashTree testTree)</span> &#123;</span><br><span class="line">    <span class="type">TreeCloner</span> <span class="variable">cloner</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">TreeCloner</span>(<span class="literal">false</span>);</span><br><span class="line">    testTree.traverse(cloner);</span><br><span class="line">    test = cloner.getClonedTree();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>ClientJMeterEngine#configure</code> 方法实现很简单，就是克隆一份测试计划，然后赋值给HashTree test，这个test对象会在<code>org.apache.jmeter.engine.ClientJMeterEngine#runTest</code> 方法中被使用。</p>
+<h3 id="runTest-1"><a href="#runTest-1" class="headerlink" title="runTest"></a>runTest</h3><p><code>ClientJmeterEngine#runTest</code> 方法实现如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">runTest</span><span class="params">()</span> <span class="keyword">throws</span> JMeterEngineException &#123;</span><br><span class="line">    log.info(<span class="string">&quot;running clientengine run method&quot;</span>);</span><br><span class="line">    <span class="comment">// See https://bz.apache.org/bugzilla/show_bug.cgi?id=55510</span></span><br><span class="line">    JMeterContextService.clearTotalThreads();</span><br><span class="line">    <span class="type">HashTree</span> <span class="variable">testTree</span> <span class="operator">=</span> test;</span><br><span class="line">    <span class="keyword">synchronized</span>(testTree) &#123;</span><br><span class="line">        <span class="type">PreCompiler</span> <span class="variable">compiler</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">PreCompiler</span>(<span class="literal">true</span>);</span><br><span class="line">        testTree.traverse(compiler);  <span class="comment">// limit the changes to client only test elements</span></span><br><span class="line">        JMeterContextService.initClientSideVariables(compiler.getClientSideVariables());</span><br><span class="line">        testTree.traverse(<span class="keyword">new</span> <span class="title class_">TurnElementsOn</span>());</span><br><span class="line">        testTree.traverse(<span class="keyword">new</span> <span class="title class_">ConvertListeners</span>());</span><br><span class="line">    &#125;</span><br><span class="line">    String methodName=<span class="string">&quot;unknown&quot;</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        JMeterContextService.startTest();</span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">         * Add fix for Deadlocks, see:</span></span><br><span class="line"><span class="comment">         *</span></span><br><span class="line"><span class="comment">         * See https://bz.apache.org/bugzilla/show_bug.cgi?id=48350</span></span><br><span class="line"><span class="comment">        */</span></span><br><span class="line">        <span class="type">File</span> <span class="variable">baseDirRelative</span> <span class="operator">=</span> FileServer.getFileServer().getBaseDirRelative();</span><br><span class="line">        <span class="type">String</span> <span class="variable">scriptName</span> <span class="operator">=</span> FileServer.getFileServer().getScriptName();</span><br><span class="line">        <span class="keyword">synchronized</span>(LOCK)</span><br><span class="line">        &#123;</span><br><span class="line">            methodName=<span class="string">&quot;rconfigure()&quot;</span>; <span class="comment">// NOSONAR Used for tracing</span></span><br><span class="line">            remote.rconfigure(testTree, hostAndPort, baseDirRelative, scriptName);</span><br><span class="line">        &#125;</span><br><span class="line">        log.info(<span class="string">&quot;sent test to &#123;&#125; basedir=&#x27;&#123;&#125;&#x27;&quot;</span>, hostAndPort, baseDirRelative); <span class="comment">// $NON-NLS-1$</span></span><br><span class="line">        <span class="keyword">if</span>(savep == <span class="literal">null</span>) &#123;</span><br><span class="line">            savep = <span class="keyword">new</span> <span class="title class_">Properties</span>();</span><br><span class="line">        &#125;</span><br><span class="line">        log.info(<span class="string">&quot;Sending properties &#123;&#125;&quot;</span>, savep);</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            methodName=<span class="string">&quot;rsetProperties()&quot;</span>;<span class="comment">// NOSONAR Used for tracing</span></span><br><span class="line">            remote.rsetProperties(toHashMapOfString(savep));</span><br><span class="line">        &#125; <span class="keyword">catch</span> (RemoteException e) &#123;</span><br><span class="line">            log.warn(<span class="string">&quot;Could not set properties: &#123;&#125;, error:&#123;&#125;&quot;</span>, savep, e.getMessage(), e);</span><br><span class="line">        &#125;</span><br><span class="line">        methodName=<span class="string">&quot;rrunTest()&quot;</span>;</span><br><span class="line">        remote.rrunTest();</span><br><span class="line">        log.info(<span class="string">&quot;sent run command to &#123;&#125;&quot;</span>, hostAndPort);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (IllegalStateException ex) &#123;</span><br><span class="line">        log.error(<span class="string">&quot;Error in &#123;&#125; method &quot;</span>, methodName, ex); <span class="comment">// $NON-NLS-1$ $NON-NLS-2$</span></span><br><span class="line">        tidyRMI(log);</span><br><span class="line">        <span class="keyword">throw</span> ex; <span class="comment">// Don&#x27;t wrap this error - display it as is</span></span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception ex) &#123;</span><br><span class="line">        log.error(<span class="string">&quot;Error in &#123;&#125; method&quot;</span>, methodName, ex); <span class="comment">// $NON-NLS-1$ $NON-NLS-2$</span></span><br><span class="line">        tidyRMI(log);</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">JMeterEngineException</span>(<span class="string">&quot;Error in &quot;</span> + ethodName + <span class="string">&quot; method &quot;</span> + ex, ex); <span class="comment">// $NON-NLS-1$ $NON-NLS-2$</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>方法执行过程如下：</p>
+<ol>
+<li>初始化 JMeterContextService，将JMeterContextService中的线程信息清空，调用的方法为<code>JMeterContextService#clearTotalThreads</code>。</li>
+<li>通过<code>ClientJmeterEngine#configure</code>方法克隆一份测试计划，赋值给一个新的HashTree对象testTree。</li>
+<li>testTree对象被同步，然后通过<code>PreCompiler</code>对测试计划进行预编译，将测试计划中的变量进行替换，并获取客户端变量。</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">synchronized</span>(testTree) &#123;</span><br><span class="line">    <span class="type">PreCompiler</span> <span class="variable">compiler</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">PreCompiler</span>(<span class="literal">true</span>);</span><br><span class="line">    testTree.traverse(compiler);  <span class="comment">// limit the changes to client only test elements</span></span><br><span class="line">    JMeterContextService.initClientSideVariables(compiler.getClientSideVariables());</span><br><span class="line">    testTree.traverse(<span class="keyword">new</span> <span class="title class_">TurnElementsOn</span>());</span><br><span class="line">    testTree.traverse(<span class="keyword">new</span> <span class="title class_">ConvertListeners</span>());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>PreCompiler</code>类是JMeter的预编译器，用于替换测试计划中的变量。在上面讲StandardJMeterEngine的时候，我们提到过，JMeter的变量替换是在测试计划执行之前进行的，而<code>PreCompiler</code>就是负责这个工作的。</li>
+<li><code>JMeterContextService.initClientSideVariables(compiler.getClientSideVariables());</code>这行代码的作用是将预编译器中获取到的客户端变量初始化到JMeterContextService中。初始化变量的过程是<code>org.apache.jmeter.engine.PreCompiler#addNode</code>方法解析这个testTree，然后对HashTree中的每个元素进行判断，如果元素类型是<code>org.apache.jmeter.testelement.TestPlan</code>，则去解析用户自定义的变量，然后放到<code>org.apache.jmeter.threads.JMeterVariables</code>中，如果元素类型是<code>org.apache.jmeter.config.Arguments</code>, 则直接获取参数列表，然后放到<code>org.apache.jmeter.threads.JMeterVariables</code>中。</li>
+<li><code>testTree.traverse(new TurnElementsOn());</code>这行代码的作用是将测试计划中的所有元素都设置为运行状态，在 JMeter 中，一个测试元素可以有两个不同的状态：编辑状态和运行时状态，当测试计划在 JMeter 中被载入和显示时，它处于“编辑状态”；当测试计划被执行时，测试元素被转换到“运行状态”。</li>
+<li><code>testTree.traverse(new ConvertListeners());</code>这行代码的作用是将测试计划中的监听器转换为远程监听器，远程监听器是 JMeter 的一种特殊类型的监听器，它可以在远程服务器上运行，并将结果发送回客户端。</li>
+</ul>
+<ol start="4">
+<li><p>接下来就是通过RMI将测试计划发送到远程服务器，然后执行测试计划。RMI是Java远程方法调用（Remote Method Invocation）的简称，它是一种允许一个Java虚拟机上的对象调用另一个Java虚拟机上的对象的方法的技术。在JMeter中，RMI被用来在远程服务器上执行测试计划，并将结果发送回客户端。在<code>org.apache.jmeter.engine.ClientJMeterEngine</code>中，有一个<code>private RemoteJMeterEngine remote</code>  对象，这个对象就是用来执行远程测试计划的。在<code>org.apache.jmeter.engine.RemoteJMeterEngine</code>中也同样定义了与<code>org.apache.jmeter.engine.JMeterEngine</code>接口中类似的方法，只不过这些方法前面都多了一个<code>r</code>表示远程调用。如：<code>rrunTest()</code>、<code>rconfigure()</code>、<code>rsetProperties()</code>等。</p>
+</li>
+<li><p>如果在执行过程中发生异常，则停止远程服务器上的测试计划，并打印相关日志。</p>
+</li>
+</ol>
+<p>总结：</p>
+<p><code>org.apache.jmeter.engine.ClientJMeterEngine</code>类是JMeter的客户端执行引擎，它负责将测试计划发送到远程服务器，并在远程服务器上执行测试计划。整个执行过程跟<code>org.apache.jmeter.engine.StandardJMeterEngine</code>类似，只不过<code>org.apache.jmeter.engine.ClientJMeterEngine</code>是通过RMI将测试计划发送到远程服务器，并在远程服务器上执行测试计划，然后由远程服务器将结果发送回客户端。</p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://linvaux.github.io/posts/fbd833ae/" title="Jmeter源码系列(5)-JmeterEngine-Jmeter的执行引擎" target="_blank" rel="external">https://linvaux.github.io/posts/fbd833ae/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="https://gitee.com/linvaux" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="/images/avatar1.jpg" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="https://gitee.com/linvaux" target="_blank"><span class="text-dark">大耳朵图图</span><small class="ml-1x">Java开发/高级测试开发</small></a></h3>
+        <div>一个持续学习的靓仔</div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/posts/a7b6bddb/" title="Github Pages使用Hexo搭建个人博客"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/posts/75270eba/" title="【Jmeter扩展开发】自定义Java请求"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+
+    <script>
+(function ($) {
+    $('.search-form').on('submit', function (e) {
+        var keyword = $('.search-form-input[name="wd"]').val();
+        window.location = 'https://www.baidu.com/s?wd=site:linvaux.github.io ' + keyword;
+        return false;
+    });
+})(jQuery);
+</script>
+
+
+
+
+   
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+   
+
+
+  <script src="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.3.5/dist/jquery.fancybox.min.js"></script>
+  <script>
+  //利用 FancyBox 实现点击图片放大
+  $(document).ready(function() {
+    $('article img').not('[hidden]').not('.panel-body img').each(function() {
+      var $image = $(this);
+      var imageCaption = $image.attr('alt');
+      var $imageWrapLink = $image.parent('a');
+      if ($imageWrapLink.length < 1) {
+        var src = this.getAttribute('src');
+        var idx = src.lastIndexOf('?');
+        if (idx != -1) {
+          src = src.substring(0, idx);
+        }
+        $imageWrapLink = $image.wrap('<a href="' + src + '"></a>').parent('a');
+      }
+      $imageWrapLink.attr('data-fancybox', 'images');
+      if (imageCaption) {
+        $imageWrapLink.attr('data-caption', imageCaption);
+      }
+    });
+    $().fancybox({
+      selector: '[data-fancybox="images"]',
+      hash: false,
+      loop: false,
+    });
+  });
+  </script>
+
+
+
+
+
+</body>
+</html>

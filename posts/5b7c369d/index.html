@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>Java 集成Maven Embedder 编译 Maven 项目 | 写bug的大耳朵图图</title>
+  <meta name="description" content="背景最近在开发代码覆盖率的平台，涉及到对 java 项目编译后使用 jacococli 来生成报告，需要指定 java 项目 class 文件路径和源码路径。因此，需要对用户配置的 java 项目在服务器上进行编译，Java 项目构建工具有很多种，比如 Ant，Maven，Gradle 等，本文只针对 Maven 构建的项目如何编译进行讲解。以下用于演示编译的项目是 apolloconfig&amp;#x">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java 集成Maven Embedder 编译 Maven 项目">
+<meta property="og:url" content="https://linvaux.github.io/posts/5b7c369d/index.html">
+<meta property="og:site_name" content="写bug的大耳朵图图">
+<meta property="og:description" content="背景最近在开发代码覆盖率的平台，涉及到对 java 项目编译后使用 jacococli 来生成报告，需要指定 java 项目 class 文件路径和源码路径。因此，需要对用户配置的 java 项目在服务器上进行编译，Java 项目构建工具有很多种，比如 Ant，Maven，Gradle 等，本文只针对 Maven 构建的项目如何编译进行讲解。以下用于演示编译的项目是 apolloconfig&amp;#x">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://linvaux.github.io/images/g2V4kNBeWAYwy89d7uSyf4LC.jpg">
+<meta property="og:image" content="https://linvaux.github.io/images/iq4Zx4Cz9GCJjkw9kiJs3WaU.jpg">
+<meta property="og:image" content="https://linvaux.github.io/images/bByVX8VYf8mEKjfMp25Qudpr.jpg">
+<meta property="article:published_time" content="2023-09-07T15:01:56.000Z">
+<meta property="article:modified_time" content="2024-09-21T00:59:08.928Z">
+<meta property="article:author" content="Wick">
+<meta property="article:tag" content="Java">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://linvaux.github.io/images/g2V4kNBeWAYwy89d7uSyf4LC.jpg">
+  <!-- Canonical links -->
+  <link rel="canonical" href="https://linvaux.github.io/posts/5b7c369d/index.html">
+  
+    <link rel="alternate" href="/atom.xml" title="写bug的大耳朵图图" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+  
+    <link href="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.3.5/dist/jquery.fancybox.min.css" rel="stylesheet">
+  
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body class="main-center theme-black" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://gitee.com/linvaux" target="_blank">
+          <img class="img-circle img-rotate" src="/images/avatar1.jpg" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">大耳朵图图</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Java开发/高级测试开发</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> 中国·南京</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form" method="GET" action="https://www.baidu.com/s?">
+	<div class="input-group">
+    	<input name="wd" type="text" class="form-control search-form-input" placeholder="搜索" />
+	    <span class="input-group-btn">
+	    	<button type="submit" class=" btn btn-flat search-form-submit"><i class="icon icon-search"></i></button>
+	    </span>
+    </div>
+</form>
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav menu-highlight">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">首页</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">归档</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">友链</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">关于</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">公告</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <h5>原博客地址：<a href = "https://geeknote.net/wick">https://geeknote.net/wick</a></h5>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget-body tagcloud">
+      <a href="/tags/Docker/" style="font-size: 13.6px;">Docker</a> <a href="/tags/EasyExcel/" style="font-size: 13.4px;">EasyExcel</a> <a href="/tags/IDEA/" style="font-size: 13.4px;">IDEA</a> <a href="/tags/Java/" style="font-size: 14px;">Java</a> <a href="/tags/Jenkins/" style="font-size: 13px;">Jenkins</a> <a href="/tags/Jmeter%E6%89%A9%E5%B1%95%E5%BC%80%E5%8F%91/" style="font-size: 13px;">Jmeter扩展开发</a> <a href="/tags/Jmeter%E6%BA%90%E7%A0%81%E7%B3%BB%E5%88%97/" style="font-size: 13.8px;">Jmeter源码系列</a> <a href="/tags/LogStash/" style="font-size: 13px;">LogStash</a> <a href="/tags/Mac/" style="font-size: 13px;">Mac</a> <a href="/tags/Pytest/" style="font-size: 13px;">Pytest</a> <a href="/tags/%E4%BB%A3%E7%A0%81%E8%A6%86%E7%9B%96%E7%8E%87/" style="font-size: 13.2px;">代码覆盖率</a> <a href="/tags/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/" style="font-size: 13px;">自动化测试</a> <a href="/tags/%E9%9A%8F%E7%AC%94/" style="font-size: 13px;">随笔</a>
+    </div>
+  </div>
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/08/">八月 2024</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/07/">七月 2024</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/05/">五月 2024</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/10/">十月 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/09/">九月 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/08/">八月 2023</a><span class="archive-list-count">3</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/07/">七月 2023</a><span class="archive-list-count">6</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/06/">六月 2023</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/04/">四月 2023</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">三月 2023</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/07/">七月 2020</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/05/">五月 2020</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/11/">十一月 2019</a><span class="archive-list-count">1</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">七月 2019</a><span class="archive-list-count">2</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/posts/a7b6bddb/" class="title">Github Pages使用Hexo搭建个人博客</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-08-24T13:59:39.000Z" itemprop="datePublished">2024-08-24</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/posts/fbd833ae/" class="title">Jmeter源码系列(5)-JmeterEngine-Jmeter的执行引擎</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-08-04T04:41:26.000Z" itemprop="datePublished">2024-08-04</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/posts/75270eba/" class="title">【Jmeter扩展开发】自定义Java请求</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-08-03T01:36:37.000Z" itemprop="datePublished">2024-08-03</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/posts/67f865da/" class="title">IDEA插件整理(二)</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-07-31T14:02:28.000Z" itemprop="datePublished">2024-07-31</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/posts/7d6bf7a5/" class="title">Jmeter源码系列(4) - Jmeter 类详解-runNonGui()，无界面模式下的脚本执行过程</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2024-07-28T14:03:54.000Z" itemprop="datePublished">2024-07-28</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-Java-集成Maven-Embedder-编译-Maven-项目" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Java 集成Maven Embedder 编译 Maven 项目
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/posts/5b7c369d/" class="article-date">
+	  <time datetime="2023-09-07T15:01:56.000Z" itemprop="datePublished">2023-09-07</time>
+	</a>
+</span>
+        
+        
+  <span class="article-tag">
+    <i class="icon icon-tags"></i>
+	<a class="article-tag-link-link" href="/tags/Java/" rel="tag">Java</a>
+  </span>
+
+
+        
+	<span class="article-read hidden-xs">
+	    <i class="icon icon-eye-fill" aria-hidden="true"></i>
+	    <span id="busuanzi_container_page_pv">
+			<span id="busuanzi_value_page_pv">0</span>
+		</span>
+	</span>
+
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/posts/5b7c369d/#comments" class="article-comment-link">评论</a></span>
+        
+	
+		<span class="post-wordcount hidden-xs" itemprop="wordCount">字数统计: 1.3k(字)</span>
+	
+	
+		<span class="post-readcount hidden-xs" itemprop="timeRequired">阅读时长: 5(分)</span>
+	
+
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>最近在开发代码覆盖率的平台，涉及到对 java 项目编译后使用 jacococli 来生成报告，需要指定 java 项目 class 文件路径和源码路径。因此，需要对用户配置的 java 项目在服务器上进行编译，Java 项目构建工具有很多种，比如 Ant，Maven，Gradle 等，本文只针对 Maven 构建的项目如何编译进行讲解。以下用于演示编译的项目是 <a target="_blank" rel="noopener" href="https://gitee.com/apolloconfig/apollo">apolloconfig&#x2F;apollo</a></p>
+<h2 id="编译方案"><a href="#编译方案" class="headerlink" title="编译方案"></a>编译方案</h2><p>Maven 项目编译其实很简单，常用的命令就是</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mvn clean package</span><br></pre></td></tr></table></figure>
+
+<p>但是我在上面说了，我是要在部署了代码覆盖率服务(以下简称 cov 服务，使用 springboot 开发)的服务器上进行编译，这个 cov 服务本身就是使用 Maven 构建，然后使用 Dockerfile 打包成镜像，在 k8s 上部署的，在这个镜像里面只有必要的 JDK 依赖 。因此，如果要在 cov 服务上进行 Maven 项目的构建，则需要先配置 Maven 环境，因为这个镜像是由运维统一提供，所以再往镜像里面打包 Maven 这个事情推动起来比较困难(不要问我哪里困难，问就是他们不愿意)，因此，需要使用其他方式来创建 Maven 项目的编译环境。</p>
+<h3 id="使用-Maven-工具编译"><a href="#使用-Maven-工具编译" class="headerlink" title="使用 Maven 工具编译"></a>使用 Maven 工具编译</h3><p>使用 Maven 工具编译应该是绝大多数人的第一反应，直接在项目启动时从 Maven 官方下载一个<a target="_blank" rel="noopener" href="https://dlcdn.apache.org/maven/maven-3/3.8.8/binaries/apache-maven-3.8.8-bin.zip">apache-maven-3.8.8-bin.zip</a>安装包，解压到指定目录，然后通过 Java Runtime 来执行命令即可。道理确实如此，所以可以使用如下脚本进行安装。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wget https://dlcdn.apache.org/maven/maven-3/3.8.8/binaries/apache-maven-3.8.8-bin.zip &amp;&amp; unzip apache-maven-3.8.8-bin.zip -d /opt</span><br></pre></td></tr></table></figure>
+<p>项目编译可以使用如下 Java 代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Runtime</span> <span class="variable">runtime</span> <span class="operator">=</span> Runtime.getRuntime();</span><br><span class="line">runtime.exec(<span class="string">&quot;cd /Users/wick/Downloads/repo/apollo &amp;&amp; mvn -T 4C clean install -Dmaven.test.skip=true&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<h3 id="使用-Maven-Embedder-编译"><a href="#使用-Maven-Embedder-编译" class="headerlink" title="使用 Maven Embedder 编译"></a>使用 Maven Embedder 编译</h3><p>除了上面的方式之外，还有一种方法，就是使用 Maven Embedder 来编译 Maven 项目，这样只需要在我们 cov 服务中集成相关的依赖，就可以直接使用 Java 代码来编译 Maven 项目，无需在服务器上安装 Maven 工具。具体做法如下</p>
+<ul>
+<li>在 cov 服务中配置 Maven 依赖</li>
+</ul>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- 省略了其他依赖 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependencies</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.networknt<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>slf4j-logback<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">version</span>&gt;</span>2.1.25<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.maven<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>maven-embedder<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">version</span>&gt;</span>3.6.3<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.maven<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>maven-compat<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">version</span>&gt;</span>3.6.3<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.maven.resolver<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>maven-resolver-connector-basic<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.9.15<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.maven.resolver<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>maven-resolver-transport-http<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.9.15<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"><span class="comment">&lt;!-- 拉取代码 --&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.eclipse.jgit<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>org.eclipse.jgit<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">version</span>&gt;</span>6.6.0.202305301015-r<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependencies</span>&gt;</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>代码实现</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> org.apache.maven.cli.MavenCli;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span>: wick</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span>: 2023/8/19 21:39</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@description</span>: Maven编译服务</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">MavenCompilerService</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">compiler</span><span class="params">(String codePath, String... commands)</span> &#123;</span><br><span class="line">        <span class="type">MavenCli</span> <span class="variable">cli</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">MavenCli</span>();</span><br><span class="line">        <span class="type">String</span> <span class="variable">mvnHome</span> <span class="operator">=</span> MavenCli.USER_MAVEN_CONFIGURATION_HOME.getAbsolutePath();</span><br><span class="line">        System.getProperties().setProperty(<span class="string">&quot;maven.multiModuleProjectDirectory&quot;</span>, mvnHome);</span><br><span class="line">        <span class="type">int</span> <span class="variable">statusCode</span> <span class="operator">=</span> cli.doMain(commands, codePath, System.out, System.err);</span><br><span class="line">        <span class="keyword">if</span> (statusCode != <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">RuntimeException</span>(<span class="string">&quot;编译失败&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        <span class="type">MavenCompilerService</span> <span class="variable">mavenCompilerService</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">MavenCompilerService</span>();</span><br><span class="line">        String[] commands = &#123;<span class="string">&quot;-T 4C&quot;</span>,<span class="string">&quot;clean&quot;</span>, <span class="string">&quot;install&quot;</span>, <span class="string">&quot;-Dmaven.test.skip=true&quot;</span>&#125;;</span><br><span class="line">        mavenCompilerService.compiler(<span class="string">&quot;/Users/wick/Downloads/repo/apollo&quot;</span>, commands);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在上面的 Maven 命令中，使用了一个参数 <em><strong>-T 4C</strong></em> ，作用是：使用 4 核编译，加快编译速度。</p>
+<p>执行 main 方法之后，看一下控制台输出：</p>
+<p><img src="/../images/g2V4kNBeWAYwy89d7uSyf4LC.jpg" alt="iShot_2023-08-19_21.44.50.jpg"></p>
+<p>可以发现这个跟我们正常执行编译命令的输出没有区别，再看一下是不是真的编译完了</p>
+<p>编译前<br><img src="/../images/iq4Zx4Cz9GCJjkw9kiJs3WaU.jpg" alt="iShot_2023-08-19_21.42.33.jpg"></p>
+<p>编译后<br><img src="/../images/bByVX8VYf8mEKjfMp25Qudpr.jpg" alt="iShot_2023-08-19_21.44.04.jpg"></p>
+<p>可以看到，这个项目的 target 目录已经生成，说明项目编译完成。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>上面两种编译方案各有优势，直接使用 Maven 工具正常情况下来说是非常方便的，但是缺点是在我现在的场景下不太适用。第二种使用 Maven Embedder 虽然解决了安装工具的问题，但是对于需要执行一些特殊命令，如 deploy 时，就需要开发者去了解这个依赖相关的配置，要知道怎么在 MavenCli 中配置 Maven 仓库推送依赖的账号和密码，以及怎么指定仓库等等问题。所幸，cov 服务只是涉及代码拉取和编译，并不涉及到上述复杂场景，cov 拉取的代码也是公司内部的项目，均是在 pom.xml 中配置好公司内部仓库地址的。等后续遇到其他问题时，再来继续补充此文章内容吧，碎觉！</p>
+
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>本文链接：</strong>
+      <a href="https://linvaux.github.io/posts/5b7c369d/" title="Java 集成Maven Embedder 编译 Maven 项目" target="_blank" rel="external">https://linvaux.github.io/posts/5b7c369d/</a>
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>版权声明： </strong> 本博客所有文章除特别声明外，均采用 <a href="http://creativecommons.org/licenses/by/4.0/deed.zh" target="_blank" rel="external">CC BY 4.0 CN协议</a> 许可协议。转载请注明出处！
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="https://gitee.com/linvaux" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="/images/avatar1.jpg" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="https://gitee.com/linvaux" target="_blank"><span class="text-dark">大耳朵图图</span><small class="ml-1x">Java开发/高级测试开发</small></a></h3>
+        <div>一个持续学习的靓仔</div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    <li class="prev">
+      <a href="/posts/4599864a/" title="基于Jmeter和Selenium的WebUI自动化测试服务实现思路"><i class="icon icon-angle-left" aria-hidden="true"></i><span>&nbsp;&nbsp;上一篇</span></a>
+    </li>
+    
+    
+    <li class="next">
+      <a href="/posts/d7156345/" title="基于 Jacoco 的 java 代码覆盖率收集服务设计"><span>下一篇&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  
+  <div class="bar-right">
+    
+  </div>
+  </div>
+</nav>
+  
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+
+<script src="/js/plugin.min.js"></script>
+
+
+<script src="/js/application.js"></script>
+
+
+
+    <script>
+(function ($) {
+    $('.search-form').on('submit', function (e) {
+        var keyword = $('.search-form-input[name="wd"]').val();
+        window.location = 'https://www.baidu.com/s?wd=site:linvaux.github.io ' + keyword;
+        return false;
+    });
+})(jQuery);
+</script>
+
+
+
+
+   
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+
+   
+
+
+  <script src="//cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.3.5/dist/jquery.fancybox.min.js"></script>
+  <script>
+  //利用 FancyBox 实现点击图片放大
+  $(document).ready(function() {
+    $('article img').not('[hidden]').not('.panel-body img').each(function() {
+      var $image = $(this);
+      var imageCaption = $image.attr('alt');
+      var $imageWrapLink = $image.parent('a');
+      if ($imageWrapLink.length < 1) {
+        var src = this.getAttribute('src');
+        var idx = src.lastIndexOf('?');
+        if (idx != -1) {
+          src = src.substring(0, idx);
+        }
+        $imageWrapLink = $image.wrap('<a href="' + src + '"></a>').parent('a');
+      }
+      $imageWrapLink.attr('data-fancybox', 'images');
+      if (imageCaption) {
+        $imageWrapLink.attr('data-caption', imageCaption);
+      }
+    });
+    $().fancybox({
+      selector: '[data-fancybox="images"]',
+      hash: false,
+      loop: false,
+    });
+  });
+  </script>
+
+
+
+
+
+</body>
+</html>
