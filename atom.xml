@@ -3,11 +3,11 @@
   <title>千虫家</title>
   
   <subtitle>写不完的 bug，捉不完的虫</subtitle>
-  <link href="https://linvaux.github.io/atom.xml" rel="self"/>
+  <link href="https://www.qianchongjia.com/atom.xml" rel="self"/>
   
-  <link href="https://linvaux.github.io/"/>
+  <link href="https://www.qianchongjia.com/"/>
   <updated>2025-03-20T12:23:10.198Z</updated>
-  <id>https://linvaux.github.io/</id>
+  <id>https://www.qianchongjia.com/</id>
   
   <author>
     <name>Wick</name>
@@ -18,8 +18,8 @@
   
   <entry>
     <title>Java 集成 maven-invoker 编译 Maven 项目</title>
-    <link href="https://linvaux.github.io/posts/cc34e0bb/"/>
-    <id>https://linvaux.github.io/posts/cc34e0bb/</id>
+    <link href="https://www.qianchongjia.com/posts/cc34e0bb/"/>
+    <id>https://www.qianchongjia.com/posts/cc34e0bb/</id>
     <published>2025-03-09T13:54:29.000Z</published>
     <updated>2025-03-20T12:23:10.198Z</updated>
     
@@ -34,14 +34,14 @@
     
     
     
-    <category term="Java" scheme="https://linvaux.github.io/tags/Java/"/>
+    <category term="Java" scheme="https://www.qianchongjia.com/tags/Java/"/>
     
   </entry>
   
   <entry>
     <title>Ubuntu安装mysql-server</title>
-    <link href="https://linvaux.github.io/posts/91af07a2/"/>
-    <id>https://linvaux.github.io/posts/91af07a2/</id>
+    <link href="https://www.qianchongjia.com/posts/91af07a2/"/>
+    <id>https://www.qianchongjia.com/posts/91af07a2/</id>
     <published>2025-02-01T12:22:12.000Z</published>
     <updated>2025-03-20T12:23:10.199Z</updated>
     
@@ -56,14 +56,14 @@
     
     
     
-    <category term="linux" scheme="https://linvaux.github.io/tags/linux/"/>
+    <category term="linux" scheme="https://www.qianchongjia.com/tags/linux/"/>
     
   </entry>
   
   <entry>
     <title>Maven项目POM.XML文件配置详解</title>
-    <link href="https://linvaux.github.io/posts/3a2870fd/"/>
-    <id>https://linvaux.github.io/posts/3a2870fd/</id>
+    <link href="https://www.qianchongjia.com/posts/3a2870fd/"/>
+    <id>https://www.qianchongjia.com/posts/3a2870fd/</id>
     <published>2025-01-26T04:53:56.000Z</published>
     <updated>2025-01-26T04:58:36.584Z</updated>
     
@@ -79,14 +79,14 @@
     
     
     
-    <category term="Maven" scheme="https://linvaux.github.io/tags/Maven/"/>
+    <category term="Maven" scheme="https://www.qianchongjia.com/tags/Maven/"/>
     
   </entry>
   
   <entry>
     <title>Jmeter源码系列(6)-Jmeter线程组启动过程</title>
-    <link href="https://linvaux.github.io/posts/ba589c60/"/>
-    <id>https://linvaux.github.io/posts/ba589c60/</id>
+    <link href="https://www.qianchongjia.com/posts/ba589c60/"/>
+    <id>https://www.qianchongjia.com/posts/ba589c60/</id>
     <published>2024-11-30T03:21:38.000Z</published>
     <updated>2025-01-26T04:52:37.598Z</updated>
     
@@ -101,14 +101,14 @@
     
     
     
-    <category term="Jmeter源码系列" scheme="https://linvaux.github.io/tags/Jmeter%E6%BA%90%E7%A0%81%E7%B3%BB%E5%88%97/"/>
+    <category term="Jmeter源码系列" scheme="https://www.qianchongjia.com/tags/Jmeter%E6%BA%90%E7%A0%81%E7%B3%BB%E5%88%97/"/>
     
   </entry>
   
   <entry>
     <title>Github Pages使用Hexo搭建个人博客</title>
-    <link href="https://linvaux.github.io/posts/a7b6bddb/"/>
-    <id>https://linvaux.github.io/posts/a7b6bddb/</id>
+    <link href="https://www.qianchongjia.com/posts/a7b6bddb/"/>
+    <id>https://www.qianchongjia.com/posts/a7b6bddb/</id>
     <published>2024-08-24T13:59:39.000Z</published>
     <updated>2024-09-30T06:55:28.749Z</updated>
     
@@ -123,14 +123,14 @@
     
     
     
-    <category term="随笔" scheme="https://linvaux.github.io/tags/%E9%9A%8F%E7%AC%94/"/>
+    <category term="随笔" scheme="https://www.qianchongjia.com/tags/%E9%9A%8F%E7%AC%94/"/>
     
   </entry>
   
   <entry>
     <title>Jmeter源码系列(5)-JmeterEngine-Jmeter的执行引擎</title>
-    <link href="https://linvaux.github.io/posts/fbd833ae/"/>
-    <id>https://linvaux.github.io/posts/fbd833ae/</id>
+    <link href="https://www.qianchongjia.com/posts/fbd833ae/"/>
+    <id>https://www.qianchongjia.com/posts/fbd833ae/</id>
     <published>2024-08-04T04:41:26.000Z</published>
     <updated>2024-09-21T01:53:16.823Z</updated>
     
@@ -145,14 +145,14 @@
     
     
     
-    <category term="Jmeter源码系列" scheme="https://linvaux.github.io/tags/Jmeter%E6%BA%90%E7%A0%81%E7%B3%BB%E5%88%97/"/>
+    <category term="Jmeter源码系列" scheme="https://www.qianchongjia.com/tags/Jmeter%E6%BA%90%E7%A0%81%E7%B3%BB%E5%88%97/"/>
     
   </entry>
   
   <entry>
     <title>【Jmeter扩展开发】自定义Java请求</title>
-    <link href="https://linvaux.github.io/posts/75270eba/"/>
-    <id>https://linvaux.github.io/posts/75270eba/</id>
+    <link href="https://www.qianchongjia.com/posts/75270eba/"/>
+    <id>https://www.qianchongjia.com/posts/75270eba/</id>
     <published>2024-08-03T01:36:37.000Z</published>
     <updated>2024-09-21T00:59:08.940Z</updated>
     
@@ -167,14 +167,14 @@
     
     
     
-    <category term="Jmeter扩展开发" scheme="https://linvaux.github.io/tags/Jmeter%E6%89%A9%E5%B1%95%E5%BC%80%E5%8F%91/"/>
+    <category term="Jmeter扩展开发" scheme="https://www.qianchongjia.com/tags/Jmeter%E6%89%A9%E5%B1%95%E5%BC%80%E5%8F%91/"/>
     
   </entry>
   
   <entry>
     <title>IDEA插件整理(二)</title>
-    <link href="https://linvaux.github.io/posts/67f865da/"/>
-    <id>https://linvaux.github.io/posts/67f865da/</id>
+    <link href="https://www.qianchongjia.com/posts/67f865da/"/>
+    <id>https://www.qianchongjia.com/posts/67f865da/</id>
     <published>2024-07-31T14:02:28.000Z</published>
     <updated>2024-09-21T00:59:08.924Z</updated>
     
@@ -189,14 +189,14 @@
     
     
     
-    <category term="IDEA" scheme="https://linvaux.github.io/tags/IDEA/"/>
+    <category term="IDEA" scheme="https://www.qianchongjia.com/tags/IDEA/"/>
     
   </entry>
   
   <entry>
     <title>Jmeter源码系列(4) - Jmeter 类详解-runNonGui()，无界面模式下的脚本执行过程</title>
-    <link href="https://linvaux.github.io/posts/7d6bf7a5/"/>
-    <id>https://linvaux.github.io/posts/7d6bf7a5/</id>
+    <link href="https://www.qianchongjia.com/posts/7d6bf7a5/"/>
+    <id>https://www.qianchongjia.com/posts/7d6bf7a5/</id>
     <published>2024-07-28T14:03:54.000Z</published>
     <updated>2024-09-21T00:59:08.935Z</updated>
     
@@ -212,14 +212,14 @@
     
     
     
-    <category term="Jmeter源码系列" scheme="https://linvaux.github.io/tags/Jmeter%E6%BA%90%E7%A0%81%E7%B3%BB%E5%88%97/"/>
+    <category term="Jmeter源码系列" scheme="https://www.qianchongjia.com/tags/Jmeter%E6%BA%90%E7%A0%81%E7%B3%BB%E5%88%97/"/>
     
   </entry>
   
   <entry>
     <title>Java集成GradleToolingAPI编译Gradle项目</title>
-    <link href="https://linvaux.github.io/posts/a60e7042/"/>
-    <id>https://linvaux.github.io/posts/a60e7042/</id>
+    <link href="https://www.qianchongjia.com/posts/a60e7042/"/>
+    <id>https://www.qianchongjia.com/posts/a60e7042/</id>
     <published>2024-07-13T15:15:50.000Z</published>
     <updated>2024-09-21T00:59:08.930Z</updated>
     
@@ -234,14 +234,14 @@
     
     
     
-    <category term="Java" scheme="https://linvaux.github.io/tags/Java/"/>
+    <category term="Java" scheme="https://www.qianchongjia.com/tags/Java/"/>
     
   </entry>
   
   <entry>
     <title>JVM 命令/工具使用介绍</title>
-    <link href="https://linvaux.github.io/posts/f1ffc212/"/>
-    <id>https://linvaux.github.io/posts/f1ffc212/</id>
+    <link href="https://www.qianchongjia.com/posts/f1ffc212/"/>
+    <id>https://www.qianchongjia.com/posts/f1ffc212/</id>
     <published>2024-05-04T04:55:16.000Z</published>
     <updated>2024-09-21T00:59:08.927Z</updated>
     
@@ -256,14 +256,14 @@
     
     
     
-    <category term="Java" scheme="https://linvaux.github.io/tags/Java/"/>
+    <category term="Java" scheme="https://www.qianchongjia.com/tags/Java/"/>
     
   </entry>
   
   <entry>
     <title>Jacocoagent 改造-服务端覆盖率数据上报</title>
-    <link href="https://linvaux.github.io/posts/1cd2eecd/"/>
-    <id>https://linvaux.github.io/posts/1cd2eecd/</id>
+    <link href="https://www.qianchongjia.com/posts/1cd2eecd/"/>
+    <id>https://www.qianchongjia.com/posts/1cd2eecd/</id>
     <published>2023-10-26T15:14:25.000Z</published>
     <updated>2024-09-21T00:59:08.927Z</updated>
     
@@ -278,14 +278,14 @@
     
     
     
-    <category term="代码覆盖率" scheme="https://linvaux.github.io/tags/%E4%BB%A3%E7%A0%81%E8%A6%86%E7%9B%96%E7%8E%87/"/>
+    <category term="代码覆盖率" scheme="https://www.qianchongjia.com/tags/%E4%BB%A3%E7%A0%81%E8%A6%86%E7%9B%96%E7%8E%87/"/>
     
   </entry>
   
   <entry>
     <title>基于Jmeter和Selenium的WebUI自动化测试服务实现思路</title>
-    <link href="https://linvaux.github.io/posts/4599864a/"/>
-    <id>https://linvaux.github.io/posts/4599864a/</id>
+    <link href="https://www.qianchongjia.com/posts/4599864a/"/>
+    <id>https://www.qianchongjia.com/posts/4599864a/</id>
     <published>2023-10-01T15:12:26.000Z</published>
     <updated>2024-09-21T00:59:08.943Z</updated>
     
@@ -300,14 +300,14 @@
     
     
     
-    <category term="自动化测试" scheme="https://linvaux.github.io/tags/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/"/>
+    <category term="自动化测试" scheme="https://www.qianchongjia.com/tags/%E8%87%AA%E5%8A%A8%E5%8C%96%E6%B5%8B%E8%AF%95/"/>
     
   </entry>
   
   <entry>
     <title>Java 集成Maven Embedder 编译 Maven 项目</title>
-    <link href="https://linvaux.github.io/posts/5b7c369d/"/>
-    <id>https://linvaux.github.io/posts/5b7c369d/</id>
+    <link href="https://www.qianchongjia.com/posts/5b7c369d/"/>
+    <id>https://www.qianchongjia.com/posts/5b7c369d/</id>
     <published>2023-09-07T15:01:56.000Z</published>
     <updated>2024-09-21T00:59:08.928Z</updated>
     
@@ -322,14 +322,14 @@
     
     
     
-    <category term="Java" scheme="https://linvaux.github.io/tags/Java/"/>
+    <category term="Java" scheme="https://www.qianchongjia.com/tags/Java/"/>
     
   </entry>
   
   <entry>
     <title>基于 Jacoco 的 java 代码覆盖率收集服务设计</title>
-    <link href="https://linvaux.github.io/posts/d7156345/"/>
-    <id>https://linvaux.github.io/posts/d7156345/</id>
+    <link href="https://www.qianchongjia.com/posts/d7156345/"/>
+    <id>https://www.qianchongjia.com/posts/d7156345/</id>
     <published>2023-08-26T15:04:46.000Z</published>
     <updated>2024-09-21T00:59:08.941Z</updated>
     
@@ -344,14 +344,14 @@
     
     
     
-    <category term="代码覆盖率" scheme="https://linvaux.github.io/tags/%E4%BB%A3%E7%A0%81%E8%A6%86%E7%9B%96%E7%8E%87/"/>
+    <category term="代码覆盖率" scheme="https://www.qianchongjia.com/tags/%E4%BB%A3%E7%A0%81%E8%A6%86%E7%9B%96%E7%8E%87/"/>
     
   </entry>
   
   <entry>
     <title>Java中的异常处理</title>
-    <link href="https://linvaux.github.io/posts/22260569/"/>
-    <id>https://linvaux.github.io/posts/22260569/</id>
+    <link href="https://www.qianchongjia.com/posts/22260569/"/>
+    <id>https://www.qianchongjia.com/posts/22260569/</id>
     <published>2023-08-22T14:37:04.000Z</published>
     <updated>2024-09-21T00:59:08.929Z</updated>
     
@@ -366,14 +366,14 @@
     
     
     
-    <category term="Java" scheme="https://linvaux.github.io/tags/Java/"/>
+    <category term="Java" scheme="https://www.qianchongjia.com/tags/Java/"/>
     
   </entry>
   
   <entry>
     <title>线上问题分析案例:一个小括号引发的惨案</title>
-    <link href="https://linvaux.github.io/posts/a12172a0/"/>
-    <id>https://linvaux.github.io/posts/a12172a0/</id>
+    <link href="https://www.qianchongjia.com/posts/a12172a0/"/>
+    <id>https://www.qianchongjia.com/posts/a12172a0/</id>
     <published>2023-08-17T14:58:02.000Z</published>
     <updated>2024-09-21T00:59:08.946Z</updated>
     
@@ -388,14 +388,14 @@
     
     
     
-    <category term="Java" scheme="https://linvaux.github.io/tags/Java/"/>
+    <category term="Java" scheme="https://www.qianchongjia.com/tags/Java/"/>
     
   </entry>
   
   <entry>
     <title>深入理解Java中的序列化和反序列化</title>
-    <link href="https://linvaux.github.io/posts/131d41e/"/>
-    <id>https://linvaux.github.io/posts/131d41e/</id>
+    <link href="https://www.qianchongjia.com/posts/131d41e/"/>
+    <id>https://www.qianchongjia.com/posts/131d41e/</id>
     <published>2023-07-26T14:14:54.000Z</published>
     <updated>2024-09-21T00:59:08.945Z</updated>
     
@@ -410,14 +410,14 @@
     
     
     
-    <category term="Java" scheme="https://linvaux.github.io/tags/Java/"/>
+    <category term="Java" scheme="https://www.qianchongjia.com/tags/Java/"/>
     
   </entry>
   
   <entry>
     <title>IDEA高效使用指南(一)</title>
-    <link href="https://linvaux.github.io/posts/fb3714ea/"/>
-    <id>https://linvaux.github.io/posts/fb3714ea/</id>
+    <link href="https://www.qianchongjia.com/posts/fb3714ea/"/>
+    <id>https://www.qianchongjia.com/posts/fb3714ea/</id>
     <published>2023-07-26T13:48:42.000Z</published>
     <updated>2024-09-30T06:48:12.191Z</updated>
     
@@ -433,14 +433,14 @@
     
     
     
-    <category term="IDEA" scheme="https://linvaux.github.io/tags/IDEA/"/>
+    <category term="IDEA" scheme="https://www.qianchongjia.com/tags/IDEA/"/>
     
   </entry>
   
   <entry>
     <title>IDEA插件整理(一)</title>
-    <link href="https://linvaux.github.io/posts/c8c9feb8/"/>
-    <id>https://linvaux.github.io/posts/c8c9feb8/</id>
+    <link href="https://www.qianchongjia.com/posts/c8c9feb8/"/>
+    <id>https://www.qianchongjia.com/posts/c8c9feb8/</id>
     <published>2023-07-25T15:24:54.000Z</published>
     <updated>2024-09-21T00:59:08.925Z</updated>
     
@@ -455,7 +455,7 @@
     
     
     
-    <category term="IDEA" scheme="https://linvaux.github.io/tags/IDEA/"/>
+    <category term="IDEA" scheme="https://www.qianchongjia.com/tags/IDEA/"/>
     
   </entry>
   
